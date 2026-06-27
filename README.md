@@ -24,7 +24,7 @@ GET /alerts
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/jal-drishti.git
+git clone [https://github.com/ankitaaidev/Jal-Drishti.git]
 cd jal-drishti/backend
 
 # Install dependencies
