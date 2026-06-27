@@ -1,0 +1,18 @@
+# Virtual environment
+backend/venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Environment variables
+backend/.env
+
+# Secret keys (IMPORTANT)
+backend/gee-key.json
+
+# Database files
+backend/*.db
+
+# IDE
+.vscode/
