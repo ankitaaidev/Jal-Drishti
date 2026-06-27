@@ -1,0 +1,71 @@
+# Google Earth Engine Setup (required for real satellite data)
+
+This backend pulls **real Sentinel-1 and Sentinel-2 imagery** for your
+field polygons via the Earth Engine Python API. None of this is simulated —
+but you do need a free Earth Engine account and a few minutes of one-time
+Google Cloud setup before it will work.
+
+## 1. Create a free Earth Engine account
+Go to https://signup.earthengine.google.com and sign up (any Google
+account). Approval is usually instant for non-commercial/research use.
+
+## 2. Create or pick a Google Cloud project
+- Go to https://console.cloud.google.com
+- Create a new project (or use an existing one), note the **Project ID**
+- Enable the Earth Engine API for that project:
+  https://console.cloud.google.com/apis/library/earthengine.googleapis.com
+
+## 3. Create a service account
+- In the same project: IAM & Admin → Service Accounts → Create Service Account
+- Give it any name, e.g. `jal-drishti`
+- Grant it the role **Earth Engine Resource Viewer**
+- Click the account → Keys → Add Key → Create new key → JSON
+- This downloads a `.json` key file — save it as `backend/gee-key.json`
+  (this file is in `.gitignore` — never commit it)
+
+## 4. Register the service account for Earth Engine
+- Go to https://signup.earthengine.google.com (or the Earth Engine Cloud
+  Project registration page) and register your Cloud Project for Earth
+  Engine access if you haven't already — service accounts inherit access
+  from a registered project.
+
+## 5. Fill in `.env`
+```
+GEE_PROJECT_ID=your-project-id
+GEE_SERVICE_ACCOUNT_EMAIL=jal-drishti@your-project-id.iam.gserviceaccount.com
+GEE_SERVICE_ACCOUNT_KEY_PATH=./gee-key.json
+```
+
+## 6. Test it
+```bash
+cd backend
+pip install -r requirements.txt --break-system-packages
+uvicorn app.main:app --reload
+```
+Then create a field via `POST /fields` and call
+`POST /satellite/{field_id}/refresh` — if everything is set up correctly
+this returns real NDVI/NDWI/VV/VH values for your polygon.
+
+## Common errors
+| Error | Fix |
+|---|---|
+| `Earth Engine API not enabled for project` | Enable it at the link in step 2 |
+| `does not have permission` | Check the service account has the Earth Engine Resource Viewer role and the project is registered |
+| `No Sentinel-2 scenes found in window` | Your field is in a heavy-cloud period — widen `S2_LOOKBACK_DAYS` in `core/config.py`, or rely on the Sentinel-1 (SAR) values, which work through cloud |
+
+## Data sources used (all free, all real)
+- Sentinel-2 SR Harmonized — `COPERNICUS/S2_SR_HARMONIZED` (10m optical, ~5 day revisit)
+- Sentinel-1 GRD — `COPERNICUS/S1_GRD` (10m radar, works through cloud, ~6-12 day revisit over India)
+- Sentinel-2 Cloud Probability — `COPERNICUS/S2_CLOUD_PROBABILITY`
+- Weather — Open-Meteo (`api.open-meteo.com`), no key required
+
+## Why not the ISRO Bhuvan portal directly?
+Bhuvan's terms of service restrict the content to **viewing only** and
+prohibit redistribution or automated/non-portal access without written
+permission from NRSC/ISRO. There is no public programmatic API suited to
+this kind of automated field-level time-series pull. Sentinel-1/2 (via
+Copernicus/ESA, mirrored on Earth Engine) is the dataset actually used
+under the hood by most published India crop-monitoring research for this
+reason — it's the same satellite family used in ISRO's own published
+agriculture remote-sensing work, just accessed through an open API instead
+of through Bhuvan's UI.

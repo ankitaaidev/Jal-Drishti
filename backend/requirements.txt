@@ -1,0 +1,12 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+pydantic-settings==2.5.2
+sqlalchemy==2.0.35
+httpx==0.27.2
+earthengine-api==1.1.2
+python-dotenv==1.0.1
+
+# Optional, for production Postgres+PostGIS (not needed for SQLite demo mode)
+# psycopg2-binary==2.9.9
+# geoalchemy2==0.15.2
