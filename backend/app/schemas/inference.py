@@ -52,7 +52,7 @@ class InferenceResult(BaseModel):
 
     crop_type: str
     crop_type_confidence: float = Field(..., ge=0, le=1)
-    crop_type_method: str = "spectral-rule-based"
+    crop_type_method: str = "rule-based-fallback"
 
     growth_stage: str
     growth_stage_confidence: float = Field(..., ge=0, le=1)
@@ -91,3 +91,4 @@ class PriorityListItem(BaseModel):
     crop_type: str
     confidence: float
     explanation: str
+
