@@ -1,0 +1,3 @@
+field_name,crop_type,sowing_date,farmer_name,soil_type,corner1_lat,corner1_lon,corner2_lat,corner2_lon,corner3_lat,corner3_lon,corner4_lat,corner4_lon
+Field 1 - North Plot,wheat_cereal,2026-05-15,Self,alluvial,30.9010,75.8573,30.9010,75.8600,30.9035,75.8600,30.9035,75.8573
+Field 2 - Paddy Plot A,paddy_rice,2026-06-01,Cousin Ramesh,black_cotton,16.7050,74.2230,16.7050,74.2260,16.7075,74.2260,16.7075,74.2230

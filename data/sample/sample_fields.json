@@ -1,0 +1,56 @@
+{
+  "fields": [
+    {
+      "name": "Field A - Ludhiana Wheat Plot",
+      "farmer_name": "Demo Farmer 1",
+      "declared_crop": "wheat_cereal",
+      "sowing_date": "2026-05-15",
+      "soil_type": "alluvial",
+      "geometry_geojson": {
+        "type": "Polygon",
+        "coordinates": [[
+          [75.8573, 30.9010],
+          [75.8600, 30.9010],
+          [75.8600, 30.9035],
+          [75.8573, 30.9035],
+          [75.8573, 30.9010]
+        ]]
+      }
+    },
+    {
+      "name": "Field B - Kolhapur Paddy Plot",
+      "farmer_name": "Demo Farmer 2",
+      "declared_crop": "paddy_rice",
+      "sowing_date": "2026-06-01",
+      "soil_type": "black_cotton",
+      "geometry_geojson": {
+        "type": "Polygon",
+        "coordinates": [[
+          [74.2230, 16.7050],
+          [74.2260, 16.7050],
+          [74.2260, 16.7075],
+          [74.2230, 16.7075],
+          [74.2230, 16.7050]
+        ]]
+      }
+    },
+    {
+      "name": "Field C - Nashik Mixed Crop Plot",
+      "farmer_name": "Demo Farmer 3",
+      "declared_crop": null,
+      "sowing_date": "2026-05-20",
+      "soil_type": "red_soil",
+      "geometry_geojson": {
+        "type": "Polygon",
+        "coordinates": [[
+          [73.7898, 20.0050],
+          [73.7925, 20.0050],
+          [73.7925, 20.0075],
+          [73.7898, 20.0075],
+          [73.7898, 20.0050]
+        ]]
+      }
+    }
+  ],
+  "notes": "Coordinates are real small agricultural-area locations in Punjab/Maharashtra picked for the demo, NOT specific farmer-owned plots. Replace with your actual digitized field boundaries (drawn in QGIS/geojson.io) for a real deployment. crop_type/sowing_date are illustrative - the satellite features pulled for these polygons via Earth Engine ARE real."
+}

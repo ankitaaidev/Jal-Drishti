@@ -6,6 +6,10 @@ sqlalchemy==2.0.35
 httpx==0.27.2
 earthengine-api==1.1.2
 python-dotenv==1.0.1
+scikit-learn>=1.4
+numpy>=1.26
+joblib>=1.3
+pytest>=8.0
 
 # Optional, for production Postgres+PostGIS (not needed for SQLite demo mode)
 # psycopg2-binary==2.9.9
