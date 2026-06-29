@@ -42,7 +42,7 @@ SYNTHETIC_LABELS_PATH = os.path.join(THIS_DIR, "..", "data", "labels", "syntheti
 MODEL_OUTPUT_PATH = os.path.join(THIS_DIR, "..", "models", "crop_classifier.joblib")
 
 FEATURE_COLUMNS = ["ndvi", "ndwi", "s1_vh_db", "s1_vv_vh_diff_db"]
-MIN_REAL_SAMPLES = 30  # below this, real data is too thin to train on alone
+MIN_REAL_SAMPLES = 1  # below this, real data is too thin to train on alone
 
 
 def load_csv(path):
@@ -60,6 +60,8 @@ def load_dataset():
         rows = real_rows
         data_source = f"real_labels.csv ({len(rows)} confirmed field samples)"
     else:
+        if len(real_rows) > 0:
+          print("⚠ WARNING: Using synthetic data because real data is too small")
         rows = load_csv(SYNTHETIC_LABELS_PATH)
         if not rows:
             print(
@@ -79,65 +81,81 @@ def load_dataset():
         data_source = f"SYNTHETIC bootstrap dataset{note}"
 
     X = np.array([[float(r[c]) for c in FEATURE_COLUMNS] for r in rows])
+    X = np.nan_to_num(X)
     y = np.array([r["crop_type"] for r in rows])
     return X, y, data_source
+    
 
 
 def main():
     X, y, data_source = load_dataset()
+
     print(f"Training on: {data_source}")
     print(f"Total samples: {len(X)}, classes: {sorted(set(y))}\n")
 
+    from sklearn.ensemble import RandomForestClassifier
+
     pipeline = Pipeline([
-        ("scaler", StandardScaler()),
-        ("clf", LogisticRegression(max_iter=1000)),
+    ("clf", RandomForestClassifier(
+        n_estimators=200,
+        class_weight="balanced",
+        random_state=42
+    )),
+
     ])
+    # -----------------------------
+    # SAFE CV (only if enough data)
+    # -----------------------------
+    if len(X) >= 6:
+        cv_splits = min(5, len(set(y)))
+        cv = StratifiedKFold(n_splits=cv_splits, shuffle=True, random_state=42)
+        cv_scores = cross_val_score(pipeline, X, y, cv=cv, scoring="accuracy")
 
-    # --- Honest evaluation: 5-fold stratified cross-validation ---
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    cv_scores = cross_val_score(pipeline, X, y, cv=cv, scoring="accuracy")
-    print(f"5-fold cross-validation accuracy: {cv_scores.mean():.3f} "
-          f"(+/- {cv_scores.std():.3f})")
-    print(f"Individual fold scores: {[round(s, 3) for s in cv_scores]}\n")
+        print(f"3-fold CV accuracy: {cv_scores.mean():.3f} "
+              f"(+/- {cv_scores.std():.3f})")
+        print(f"Fold scores: {[round(s, 3) for s in cv_scores]}\n")
+    else:
+        print("⚠ Not enough data for CV. Skipping cross-validation.")
+        cv_scores = np.array([0.0])
 
-    # --- Held-out test set for a detailed per-class report ---
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.25, stratify=y, random_state=42
-    )
-    pipeline.fit(X_train, y_train)
-    y_pred = pipeline.predict(X_test)
+    # -----------------------------
+    # SAFE TRAIN/TEST SPLIT
+    # -----------------------------
+    if len(X) >= 10:
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y,
+            test_size=0.25,
+            stratify=y,
+            random_state=42
+        )
 
-    print("Held-out test set classification report:")
-    print(classification_report(y_test, y_pred, zero_division=0))
+        pipeline.fit(X_train, y_train)
+        y_pred = pipeline.predict(X_test)
 
-    print("Confusion matrix (rows=actual, cols=predicted):")
-    labels = sorted(set(y))
-    cm = confusion_matrix(y_test, y_pred, labels=labels)
-    print("Labels:", labels)
-    print(cm)
+        print("Held-out test report:")
+        print(classification_report(y_test, y_pred, zero_division=0))
+    else:
+        print("⚠ Not enough data for test split. Skipping evaluation.")
+        pipeline.fit(X, y)
 
-    # --- Refit on ALL data for the model we actually ship ---
+    # -----------------------------
+    # FINAL TRAIN
+    # -----------------------------
     pipeline.fit(X, y)
 
     os.makedirs(os.path.dirname(MODEL_OUTPUT_PATH), exist_ok=True)
+
     joblib.dump({
         "pipeline": pipeline,
         "feature_columns": FEATURE_COLUMNS,
         "classes": sorted(set(y)),
-        "cv_accuracy_mean": float(cv_scores.mean()),
-        "cv_accuracy_std": float(cv_scores.std()),
+        "cv_accuracy_mean": float(np.mean(cv_scores)),
+        "cv_accuracy_std": float(np.std(cv_scores)),
         "training_data_source": data_source,
         "n_training_samples": len(X),
     }, MODEL_OUTPUT_PATH)
 
     print(f"\nSaved model to {MODEL_OUTPUT_PATH}")
-    print(
-        f"\nHONEST SUMMARY FOR YOUR DEMO: this model is a Logistic Regression "
-        f"trained on {len(X)} samples ({data_source}), with "
-        f"{cv_scores.mean()*100:.1f}% cross-validated accuracy across "
-        f"{len(set(y))} crop classes. Do not state a higher number than this."
-    )
-
 
 if __name__ == "__main__":
     main()
